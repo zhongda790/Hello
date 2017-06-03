@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.1//EN" "http://struts.apache.org/dtds/struts-2.1.dtd">
+<struts>
+	<package name="news" namespace="/" extends="struts-default">
+	  <action name="getAll" class="GoodsAction" method="getAll">
+         <result name="success">success.jsp</result>
+      </action>
+	  <action name="update" class="GoodsAction" method="getUpdate">
+          <result name="success">success.jsp</result>
+      </action>
+     <action name="getAllS" class="GoodsAction" method="getAllS">
+          <result name="success">success.jsp</result>
+     </action>
+     <action name="getById" class="GoodsAction" method="getById">
+          <result name="success">success.jsp</result>
+     </action>
+	</package>
+</struts>    

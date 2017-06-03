@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"    
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx.xsd
+	http://www.springframework.org/schema/context    
+    http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd">
+	
+	<aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy>
+	
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	  <property name="location" value="classpath:jdbc.properties"></property>
+	</bean>
+	
+	<!--<context:property-placeholder properties-ref="classpath:jdbc.properties"/>
+	
+	--><bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+	  <!--连接数据库的驱动类 -->
+		<property name="driverClass" value="${jdbc.driverClassName}"/>
+		<!--连接数据库的url -->
+		<property name="jdbcUrl" value="${jdbc.url}"/>
+		<!--连接数据库的用户名 -->
+		<property name="user" value="${jdbc.username}"/>
+		<!--连接数据库的密码 -->
+		<property name="password" value="${jdbc.password}"/>
+		<!--连接池的最大连接数 -->
+		<property name="maxPoolSize" value="40"/>
+		<!--连接池的最小连接数 -->
+		<property name="minPoolSize" value="1"/>
+		<!--初始化连接数 -->
+		<property name="initialPoolSize" value="1"/>
+		<!--连接的最大空闲时间，超时的连接将被丢弃，单位：秒 -->
+		<property name="maxIdleTime" value="60"/>
+		<!--没有连接可用时，等待连接的时间，单位：毫秒 -->
+		<property name="checkoutTimeout" value="2000"/>
+	</bean>
+	
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+	   <property name="dataSource" ref="dataSource"></property>
+	  <property name="mappingResources">
+	    <list>
+	      <value>com/jbit/entity/Goods.hbm.xml</value>
+	    </list>
+	  </property>
+	  <property name="hibernateProperties">
+	     <props>    
+               <prop key="hibernate.dialect">org.hibernate.dialect.Oracle9Dialect</prop>    
+               <prop key="hibernate.show_sql">true</prop>    
+               <prop key="hibernate.format_sql">true</prop>  
+          </props>
+	  </property>
+	</bean>
+	
+	<!-- 配置事务-->
+	<bean id="txManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+	  <property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<!--设置事务通知 -->
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+	   <tx:attributes>
+	     <tx:method name="add*" propagation="REQUIRED"></tx:method>
+	     <tx:method name="del*" propagation="REQUIRED"></tx:method>
+	     <tx:method name="update*" propagation="REQUIRED"></tx:method>
+	     <tx:method name="get*" propagation="SUPPORTS"></tx:method>
+	     <tx:method name="tx*" propagation="SUPPORTS"></tx:method>
+	   </tx:attributes>
+	</tx:advice>
+	<!--配置切入点-->
+	<aop:config>
+      <aop:pointcut id="serviceMethod" expression="execution(* com.lv.service.*.*(..))"></aop:pointcut>
+      <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod"/>
+    </aop:config>
+    
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+	  <property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<bean id="baseDaoimpl" class="com.jbit.base.impl.BaseDaoImpl" abstract="true">
+	  <property name="hibernateTemplate" ref="hibernateTemplate"></property>
+	</bean>
+	
+	<bean id="GoodsDao" class="com.jbit.dao.impl.GoodsDaoImpl" parent="baseDaoimpl"></bean>
+	
+	<bean id="GoodsService" class="com.jbit.service.impl.GoodsServiceImpl">
+	  <property name="dao" ref="GoodsDao"></property>
+	</bean>
+	
+	<bean id="GoodsAction" class="com.jbit.action.GoodaAction">
+	  <property name="service" ref="GoodsService"></property>
+	</bean>
+</beans>
